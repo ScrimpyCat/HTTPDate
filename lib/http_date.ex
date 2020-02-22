@@ -93,4 +93,22 @@ defmodule HTTPDate do
             { :error, type } -> raise ParseError, { type, date, opts[:calendar] || Calendar.ISO }
         end
     end
+
+    @doc """
+      Format as an HTTP-date (RFC 7231).
+
+      By default it produces IMF-fixdate formatted dates, this can be changed by setting
+      the `:format` option to the desired format, see `t:format/0`.
+
+        iex> HTTPDate.format(HTTPDate.parse!("Sun, 06 Nov 1994 08:49:37 GMT"))
+        "Sun, 06 Nov 1994 08:49:37 GMT"
+
+        iex> HTTPDate.format(HTTPDate.parse!("Sunday, 06-Nov-94 08:49:37 GMT", base_year: 1900), format: :rfc850)
+        "Sunday, 06-Nov-94 08:49:37 GMT"
+
+        iex> HTTPDate.format(HTTPDate.parse!("Sun Nov  6 08:49:37 1994"), format: :asctime)
+        "Sun Nov  6 08:49:37 1994"
+    """
+    @spec format(DateTime.t, Keyword.t) :: String.t
+    def format(date, opts \\ []), do: HTTPDate.Formatter.format_date(date, opts[:format] || :imf_fixdate)
 end
