@@ -2,6 +2,28 @@ defmodule HTTPDate do
     @type format :: :imf_fixdate | :asctime | :rfc850
     @type component :: :day | :month | :year | :hour | :minute | :second
 
+    defmodule ParseError do
+        defexception [:type, :date, :calendar]
+
+        @impl Exception
+        def exception({ type, date, calendar }) do
+            %ParseError{
+                type: type,
+                date: date,
+                calendar: calendar
+            }
+        end
+
+        defp readable_format(:imf_fixdate), do: "IMF-fixdate"
+        defp readable_format(:asctime), do: "asctime"
+        defp readable_format(:rfc850), do: "RFC 850"
+
+        @impl Exception
+        def message(%{ type: :invalid, date: date, calendar: calendar }), do: "invalid date for calendar (#{inspect calendar}): #{inspect date}"
+        def message(%{ type: :unknown_format, date: date }), do: "unknown format: #{inspect date}"
+        def message(%{ type: { format, component }, date: date }), do: "invalid #{component} component in #{readable_format(format)} format: #{inspect date}"
+    end
+
     @doc """
       Parse an HTTP-date (RFC 7231).
 
@@ -51,6 +73,24 @@ defmodule HTTPDate do
                 end
             { { :ok, { date, _ } }, _ } -> { :ok, date }
             { error, _ } -> error
+        end
+    end
+
+    @doc """
+      Parse an HTTP-date (RFC 7231).
+
+      Raises a `HTTPDate.ParseError` if the date could not be parsed.
+
+      For more details see `HTTPDate.parse/2`.
+
+        iex> HTTPDate.parse!("Sun, 06 Nov 1994 08:49:37 GMT")
+        elem(DateTime.from_iso8601("1994-11-06 08:49:37Z"), 1)
+    """
+    @spec parse!(String.t, Keyword.t) :: DateTime.t | no_return
+    def parse!(date, opts \\ []) do
+        case parse(date, opts) do
+            { :ok, date } -> date
+            { :error, type } -> raise ParseError, { type, date, opts[:calendar] || Calendar.ISO }
         end
     end
 end
