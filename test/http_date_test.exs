@@ -56,6 +56,10 @@ defmodule HTTPDateTest do
             assert { :error, :unknown_format } == HTTPDate.parse("Sun, 06 Nov 1994 08:49:37 aaa", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sunday, 06 Nov 1994 08:49:37 GMT", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sun, 06 Nov 94 08:49:37 GMT", opts)
+
+            assert catch_error(HTTPDate.parse!("Mon, 23 Feb 2020 04:16:37 GMT"))
+            assert catch_error(HTTPDate.parse!("Foo, 06 Nov 1994 08:49:37 GMT", opts))
+            assert catch_error(HTTPDate.parse!("Sun, 06 Nov 94 08:49:37 GMT", opts))
         end
 
         test "RFC 850" do
@@ -112,6 +116,10 @@ defmodule HTTPDateTest do
             assert { :error, :unknown_format } == HTTPDate.parse("Sunday, 06-Nov-94 08:49:37 aaa", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sun, 06-Nov-94 08:49:37 GMT", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sunday, 06-Nov-1994 08:49:37 GMT", opts)
+
+            assert catch_error(HTTPDate.parse!("Sunday, 06-Nov-1994 08:49:37 GMT", opts))
+            assert catch_error(HTTPDate.parse!("Monday, 23-Feb-20 04:16:37 GMT", base_year: 2000))
+            assert catch_error(HTTPDate.parse!("Sunday, aa-Nov-94 08:49:37 GMT", opts))
         end
 
         test "asctime" do
@@ -166,6 +174,33 @@ defmodule HTTPDateTest do
             assert { :error, { :asctime, :year } } == HTTPDate.parse("Sun Nov 06 08:49:37 aaaa", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sun Nov 06 08:49:37 94", opts)
             assert { :error, :unknown_format } == HTTPDate.parse("Sunday Nov 06 08:49:37 1994", opts)
+
+            assert catch_error(HTTPDate.parse!("Sunday Nov 06 08:49:37 1994", opts))
+            assert catch_error(HTTPDate.parse!("Mon Feb 23 04:16:37 2020"))
+            assert catch_error(HTTPDate.parse!("Foo Nov 06 08:49:37 1994", opts))
+        end
+    end
+
+    describe "formatting" do
+        test "IMF-fixdate" do
+            assert "Sun, 02 Feb 2020 04:16:37 GMT" == HTTPDate.parse!("Sun, 02 Feb 2020 04:16:37 GMT") |> HTTPDate.format(format: :imf_fixdate)
+            assert "Sun, 02 Feb 2020 23:04:08 GMT" == HTTPDate.parse!("Sun, 02 Feb 2020 23:04:08 GMT") |> HTTPDate.format(format: :imf_fixdate)
+            assert "Sun, 23 Feb 2020 04:16:37 GMT" == HTTPDate.parse!("Sun, 23 Feb 2020 04:16:37 GMT") |> HTTPDate.format(format: :imf_fixdate)
+            assert "Wed, 23 Feb 0000 04:16:37 GMT" == HTTPDate.parse!("Wed, 23 Feb 0000 04:16:37 GMT") |> HTTPDate.format(format: :imf_fixdate)
+        end
+
+        test "RFC 850" do
+            assert "Sunday, 02-Feb-20 04:16:37 GMT" == HTTPDate.parse!("Sunday, 02-Feb-20 04:16:37 GMT", base_year: 2000) |> HTTPDate.format(format: :rfc850)
+            assert "Sunday, 02-Feb-20 23:04:08 GMT" == HTTPDate.parse!("Sunday, 02-Feb-20 23:04:08 GMT", base_year: 2000) |> HTTPDate.format(format: :rfc850)
+            assert "Sunday, 23-Feb-20 04:16:37 GMT" == HTTPDate.parse!("Sunday, 23-Feb-20 04:16:37 GMT", base_year: 2000) |> HTTPDate.format(format: :rfc850)
+            assert "Wednesday, 23-Feb-00 04:16:37 GMT" == HTTPDate.parse!("Wednesday, 23-Feb-00 04:16:37 GMT", base_year: 0) |> HTTPDate.format(format: :rfc850)
+        end
+
+        test "asctime" do
+            assert "Sun Feb  2 04:16:37 2020"  == HTTPDate.parse!("Sun Feb  2 04:16:37 2020") |> HTTPDate.format(format: :asctime)
+            assert "Sun Feb  2 23:04:08 2020"  == HTTPDate.parse!("Sun Feb 02 23:04:08 2020") |> HTTPDate.format(format: :asctime)
+            assert "Sun Feb 23 04:16:37 2020"  == HTTPDate.parse!("Sun Feb 23 04:16:37 2020") |> HTTPDate.format(format: :asctime)
+            assert "Wed Feb 23 04:16:37 0000"  == HTTPDate.parse!("Wed Feb 23 04:16:37 0000") |> HTTPDate.format(format: :asctime)
         end
     end
 end
