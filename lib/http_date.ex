@@ -41,7 +41,7 @@ defmodule HTTPDate do
       By default it uses `Calendar.ISO`, however this can be changed by passing another
       calendar to the `:calendar` option.
 
-      As the obsolete RFC 850 format only allowed for the last 2 year digits, it is
+      As the obsolete RFC 850 format only allows for the last 2 year digits, it is
       assumed these digits belong to the current year. If a specific base year is
       desired, pass the year to the `:base_year` option.
 
@@ -79,7 +79,7 @@ defmodule HTTPDate do
     @doc """
       Parse an HTTP-date (RFC 7231).
 
-      Raises a `HTTPDate.ParseError` if the date could not be parsed.
+      Raises an `HTTPDate.ParseError` if the date could not be parsed.
 
       For more details see `HTTPDate.parse/2`.
 
